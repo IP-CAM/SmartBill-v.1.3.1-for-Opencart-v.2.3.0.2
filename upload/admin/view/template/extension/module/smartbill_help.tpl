@@ -1,16 +1,8 @@
-{{ header }}{{ column_left }}
-
+<?php echo $header; ?><?php echo $column_left; ?>
 <div id="content">
   <div class="page-header">
     <div class="container-fluid">
-      <div class="pull-right">
-        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
-      <h1>{{ heading_title }}</h1>
-      <!-- <ul class="breadcrumb">
-        {% for breadcrumb in breadcrumbs %}
-        <li><a href="{{ breadcrumb['href'] }}">{{ breadcrumb['text'] }}</a></li>
-        {% endfor %}
-      </ul> -->
+      <h1><?php echo $heading_title; ?></h1>
     </div>
   </div>
   <div class="container-fluid">
@@ -29,5 +21,4 @@
     </ol>
   </div>
 </div>
-
-{{ footer }}
+<?php echo $footer; ?>

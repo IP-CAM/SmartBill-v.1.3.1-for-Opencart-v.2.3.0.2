@@ -1,15 +1,9 @@
 <?php
-
 require DIR_APPLICATION.'../admin/model/extension/smartbill_rest.php';
 
 class ControllerExtensionModuleSmartbill extends Controller {
 
 	public function install() {
-
-		// Check version
-		if (version_compare(VERSION , '3.0.0.0' , '<')) {
-			die('You must have at least Open Cart 3.0.0.0 installed.');
-		}
 
 		// Alter order table
 		$schema = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "order`");
@@ -25,7 +19,7 @@ class ControllerExtensionModuleSmartbill extends Controller {
 			}
 		}
 			$this->db->query("INSERT INTO `" . DB_PREFIX . "setting` ( `store_id`, `code`, `key`, `value`, `serialized`) VALUES
-( 0, 'SMARTBILL', 'module_smartbill_status', '1', 0);");
+( 0, 'SMARTBILL', 'smartbill_status', '1', 0);");
 		// Add user permissions
 		$this->load->model('user/user_group');
 		$user_groups = $this->model_user_user_group->getUserGroups();
@@ -122,7 +116,7 @@ class ControllerExtensionModuleSmartbill extends Controller {
         $data += $this->model_extension_smartbill->getSettings();
 
 		$data['header'] = $this->load->controller('common/header');
-		$data['module_version'] = SMRT_VERSION;
+		$data['version'] = SMRT_VERSION;
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 		$this->response->setOutput($this->load->view('extension/module/smartbill_login', $data));
@@ -143,26 +137,23 @@ class ControllerExtensionModuleSmartbill extends Controller {
 	    $data['button_add_module'] = $this->language->get('button_add_module');
 	    $data['button_remove'] = $this->language->get('button_remove');
 
-	    $data['action'] = $this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'); // URL to be directed when the save button is pressed
-	    $data['cancel'] = $this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'); // URL to be redirected when cancel button is pressed
+	    $data['action'] = $this->url->link('extension/module/smartbill', 'token=' . $this->session->data['token'], true); // URL to be directed when the save button is pressed
+	    $data['cancel'] = $this->url->link('extension/module/smartbill', 'token=' . $this->session->data['token'], true); // URL to be redirected when cancel button is pressed
 	}
 
 	private function _breadcrumbs(&$data) {
 	    $data['breadcrumbs'] = array(
 	    	array(
 		        'text'      => $this->language->get('text_home'),
-		        'href'      => $this->url->link('common/home', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-		        'separator' => false,
+		        'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], true),
 		    ),
 		    array(
 		        'text'      => $this->language->get('text_module'),
-		        'href'      => $this->url->link('module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-		        'separator' => ' :: ',
+		        'href'      => $this->url->link('module/smartbill', 'token=' . $this->session->data['token'], true),
 		    ),
 		    array(
 		        'text'      => $this->language->get('heading_title'),
-		        'href'      => $this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-		        'separator' => ' :: ',
+		        'href'      => $this->url->link('extension/module/smartbill', 'token=' . $this->session->data['token'], true),
 		    )
 	    );
 	}
