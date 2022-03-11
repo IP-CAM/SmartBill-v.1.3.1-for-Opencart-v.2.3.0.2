@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>SmartBill Cloud</name>
+    <code>sbc00001</code>
+    <version>1.3.1</version>
+    <author>IntelligentIT</author>
+    <link>http://www.smartbill.ro</link>
+
+	<file path="admin/language/english/*.php">
+		<operation>
+		  <search>
+		    <![CDATA[<?php]]>
+		  </search>
+		  <add position="after">
+		    <![CDATA[
+$_['text_smartbill'] = 'SmartBill';
+$_['text_smartbill_login'] = 'Login';
+$_['text_smartbill_settings'] = 'Settings';
+$_['text_smartbill_help'] = 'Help';
+            ]]>
+		  </add>
+		</operation>
+	</file>
+	<file path="admin/language/en-gb/*.php">
+		<operation>
+		  <search>
+		    <![CDATA[<?php]]>
+		  </search>
+		  <add position="after">
+		    <![CDATA[
+$_['text_smartbill'] = 'SmartBill';
+$_['text_smartbill_login'] = 'Login';
+$_['text_smartbill_settings'] = 'Settings';
+$_['text_smartbill_help'] = 'Help';
+            ]]>
+		  </add>
+		</operation>
+	</file>
+	<file path="admin/language/romana/*.php">
+		<operation>
+		  <search>
+		    <![CDATA[<?php]]>
+		  </search>
+		  <add position="after">
+		    <![CDATA[
+$_['text_smartbill'] = 'SmartBill';
+$_['text_smartbill_login'] = 'Autentificare';
+$_['text_smartbill_settings'] = 'Setari';
+$_['text_smartbill_help'] = 'Ajutor';
+            ]]>
+		  </add>
+		</operation>
+	</file>
+	<file path="admin/language/ro-ro/*.php">
+		<operation>
+		  <search>
+		    <![CDATA[<?php]]>
+		  </search>
+		  <add position="after">
+		    <![CDATA[
+$_['text_smartbill'] = 'SmartBill';
+$_['text_smartbill_login'] = 'Autentificare';
+$_['text_smartbill_settings'] = 'Setari';
+$_['text_smartbill_help'] = 'Ajutor';
+            ]]>
+		  </add>
+		</operation>
+	</file>
+	<file path="admin/view/template/sale/order_info.twig">
+        <operation>
+            <search index="0"><![CDATA[
+            <div class="pull-right">
+            ]]></search>
+            <add position="after"><![CDATA[
+		<a href="{{ smartbill }}" data-toggle="tooltip" class="btn btn-info pull-right {% if smartbill_document_url is not empty %} reissue {% endif %}" id="smartbill_issue" style="margin-right: 10px;">{{ button_smartbill }}</a>
+		{% if smartbill_document_url is not empty %}
+		<a href="{{ smartbill_document_url }}" target="_blank" class="btn pull-right smrt-doc" style="margin-right: 10px;">Deschide document</a>
+		<a href="{{ smartbill_mail }}" class="btn btn-info pull-right" id="smartbill_mail" style="margin-right: 10px;">Trimite factura clientului</a>
+		{% endif %}
+		<link type="text/css" href="view/stylesheet/sweetalert.css" rel="stylesheet" media="screen" />
+		<link href="view/stylesheet/smartbill.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="view/javascript/sweetalert.js"></script>
+        <script type="text/javascript" src="view/javascript/smartbill.js"></script>
+            ]]></add>
+        </operation>
+		<operation>
+            <search index="0"><![CDATA[
+            	$('textarea[name=\'comment\']').val('');
+            ]]></search>
+            <add position="after"><![CDATA[
+			var smartbill_settings={{ smartbill_settings }};
+			var smartbill_link="{{ smartbill_link }}";
+			var smartbill_document_url="{{smartbill_document_url}}";
+			if(typeof smartbill_settings != undefined && typeof smartbill_link !=undefined){
+				if (smartbill_settings.SMARTBILL_AUTOMATICALLY_ISSUE_DOCUMENT === "1") {
+					if ($('#input-order-status').val() == smartbill_settings.SMARTBILL_ORDER_STATUS) {
+					if(typeof smartbill_document_url!=undefined && smartbill_document_url!=""){
+						var attention_text = document.createElement("div");
+						attention_text.innerHTML = "Te informam ca nu se va emite automat o alta comanda in SmartBill.";
+						swal({
+						title: "Comanda a fost deja facturata in SmartBill. ",
+						content: attention_text,
+						icon: 'warning',
+						buttons: [false, 'Continua']
+						});
+					}else{
+						var api_call = smartbill_link.replace(/&amp;/g, "&");
+						var order_id_temp="{{ order_id }}";
+						api_call+=order_id_temp;
+						var attention_text = document.createElement("div");
+						attention_text.innerHTML = "Comanda #" + order_id_temp + " va fi emisa in SmartBill.";
+						swal({
+						title: "Modulul SmartBill a detectat modificarea statusului comenzii",
+						content: attention_text,
+						icon: 'info',
+						buttons: [true, true]
+						}).then(function (result) {
+						if (!result) {
+							return false;
+						}
+						var info_text = document.createElement("div");
+						info_text.innerHTML = "Va rugam asteptati raspunsul serverului...";
+						swal({
+							title: 'Se incarca!',
+							content: info_text,
+							icon: 'info',
+							buttons: [false, false]
+						});
+						
+							$.ajax({
+								url: api_call,
+								success: function (data) {
+								try {
+									data = JSON.parse(data);
+								} catch (e) {
+									var new_data = {};
+									new_data.message = data;
+									new_data.error = 'Not JSON';
+									data = new_data;
+								}
+
+								if (typeof data.error !== 'undefined' && !data.status) {
+									if (data.message == '') {
+									data.message = 'Verificati setarile modulului.';
+									}
+									if (data.message == '408') {
+									data.message = "A aparut o eroare la contactarea serverului SmartBill.Acceseaza cloud.smartbill.com, anuleaza factura pentru comanda #" + data.number + " si incearca din nou facturarea comenzii din magazinul online.";
+									}
+								
+									Toastify({
+									text: "Eroare! " + data.message.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+									}).showToast();
+
+								} else {
+									if (!$('a.smrt-doc').length) {
+										var smartbill_mail_link = document.createElement('a');
+										smartbill_mail_link.href=$('#smartbill_issue')[0].href.replace('/smartbill_document',"/smartbill_document/send_mail");
+										smartbill_mail_link.className = "btn pull-right btn-info";
+										smartbill_mail_link.innerHTML = 'Trimite factura clientului';
+										smartbill_mail_link.id="smartbill_mail";
+										$('#smartbill_issue').after(smartbill_mail_link);
+										$('#smartbill_mail').on('click', function (e) {
+											e.preventDefault();
+											var api_call = $(this).attr('href');
+											var info_text = document.createElement("div");
+											info_text.innerHTML = "Va rugam asteptati raspunsul serverului...";
+											swal({
+												title: 'Se incarca!',
+												content: info_text,
+												icon: 'info',
+												buttons: [false, false]
+											});
+											$.ajax({
+												url: api_call,
+												success: function (data) {
+													 try {
+														data = JSON.parse(data);
+													} catch (e) {
+														var new_data = {};
+														new_data.message = data;
+														new_data.error = 'Not JSON';
+														data = new_data;
+													}
+													
+													if (typeof data.error !== 'undefined' && !data.status) {
+														if (data.message == '') {
+															data.message = 'Verificati setarile modulului.';
+														}
+														Toastify({
+															text: "Eroare! " + data.message.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+														}).showToast()
+													} else {
+														Toastify({
+															text: data.message.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: 3000, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#00A14B", stopOnFocus: true,
+														}).showToast();
+													}
+													swal.close();
+												},
+												error: function (data) {
+													Toastify({
+														text: "Eroare! " + data.responseText.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+													}).showToast();
+													swal.close();
+
+												}
+											});
+										});
+										
+										var smartbill_link = document.createElement('a');
+										smartbill_link.href = data.documentUrl;
+										smartbill_link.target = "_blank";
+										smartbill_link.className = "btn pull-right smrt-doc";
+										smartbill_link.innerHTML = 'Deschide document';
+										$('#smartbill_issue').after(smartbill_link);
+									}
+									$('#smartbill_issue').addClass('reissue').html('Remite document');
+									Toastify({
+									text: "Documentul a fost emis cu succes: " + data.series+" "+data.number +".", duration: 3000, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#00A14B", stopOnFocus: true,
+									}).showToast();
+								}
+								swal.close();
+								
+								},
+								error: function (data) {
+									swal.close();
+									attention_text.innerHTML = data.responseText;
+									Toastify({
+										text: "Eroare! " + data.responseText.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+									}).showToast();
+								}
+								
+								});
+							});
+						}
+					}
+				}
+			}
+            ]]></add>
+        </operation>
+    </file>
+	<file path="admin/view/template/sale/order_list.twig">
+        <operation>
+            <search index="0"><![CDATA[
+            <div id="content">
+            ]]></search>
+            <add position="after"><![CDATA[
+		<script type="text/javascript">
+			var smartbill_documents = {{ smartbill_documents }};
+		</script>
+        <script type="text/javascript" src="view/javascript/smartbill.js"></script>
+            ]]></add>
+        </operation>
+    </file>
+	<file path="admin/view/template/sale/order_form.twig">
+        <operation>
+            <search index="0"><![CDATA[
+            <div id="content">
+            ]]></search>
+            <add position="after"><![CDATA[
+				<link type="text/css" href="view/stylesheet/sweetalert.css" rel="stylesheet" media="screen" />
+				<script type="text/javascript" src="view/javascript/sweetalert.js"></script>
+        		
+            ]]></add>
+        </operation>
+		<operation>
+            <search><![CDATA[
+            $('#content > .container-fluid').prepend('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + json['success'] + '  <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            ]]></search>
+            <add position="after"><![CDATA[
+			var smartbill_settings={{ smartbill_settings }};
+			var smartbill_link="{{ smartbill_link }}";
+			var smartbill_document_url="{{smartbill_document_url}}";
+			if(typeof smartbill_settings != undefined && typeof smartbill_link !=undefined){
+				if (smartbill_settings.SMARTBILL_AUTOMATICALLY_ISSUE_DOCUMENT === "1") {
+					if ($('#input-order-status').val() == smartbill_settings.SMARTBILL_ORDER_STATUS) {
+						if(typeof smartbill_document_url!=undefined && smartbill_document_url!=""){
+							var attention_text = document.createElement("div");
+							attention_text.innerHTML = "Te informam ca nu se va emite automat o alta comanda in SmartBill.";
+							swal({
+							title: "Comanda a fost deja facturata in SmartBill. ",
+							content: attention_text,
+							icon: 'warning',
+							buttons: [false, 'Continua']
+							});
+						}else{
+							var api_call = smartbill_link.replace(/&amp;/g, "&");
+							var order_id_temp=$('input[name=order_id]').val();
+							if(order_id_temp==0){
+								api_call=api_call+json['order_id'];
+								order_id_temp=json['order_id'];
+							}else{
+								api_call=api_call+$('input[name=order_id]').val();
+							}
+
+							var attention_text = document.createElement("div");
+							attention_text.innerHTML = "Comanda #" + order_id_temp + " va fi emisa in SmartBill.";
+							swal({
+							title: "Modulul SmartBill a detectat modificarea statusului comenzii",
+							content: attention_text,
+							icon: 'info',
+							buttons: [true, true]
+							}).then(function (result) {
+							if (!result) {
+								return false;
+							}
+							var info_text = document.createElement("div");
+							info_text.innerHTML = "Va rugam asteptati raspunsul serverului...";
+							swal({
+								title: 'Se incarca!',
+								content: info_text,
+								icon: 'info',
+								buttons: [false, false]
+							});
+						
+							$.ajax({
+								url: api_call,
+								success: function (data) {
+								try {
+									data = JSON.parse(data);
+								} catch (e) {
+									var new_data = {};
+									new_data.message = data;
+									new_data.error = 'Not JSON';
+									data = new_data;
+								}
+
+								if (typeof data.error !== 'undefined' && !data.status) {
+									if (data.message == '') {
+									data.message = 'Verificati setarile modulului.';
+									}
+									if (data.message == '408') {
+									data.message = "A aparut o eroare la contactarea serverului SmartBill.Acceseaza cloud.smartbill.com, anuleaza factura pentru comanda #" + data.number + " si incearca din nou facturarea comenzii din magazinul online.";
+									}
+								
+									Toastify({
+									text: "Eroare! " + data.message.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+									}).showToast();
+
+								} else {
+									Toastify({
+									text: "Documentul a fost emis cu succes: " + data.series+" "+data.number +".", duration: 3000, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#00A14B", stopOnFocus: true,
+									}).showToast();
+								}
+								swal.close();
+								
+								},
+								error: function (data) {
+									swal.close();
+									attention_text.innerHTML = data.responseText;
+									Toastify({
+										text: "Eroare! " + data.responseText.replace("Smart Bill", "SmartBill").replace("SmartBill Cloud", "SmartBill"), duration: -1, newWindow: false, close: true, gravity: "top", position: 'center', backgroundColor: "#EF4136", stopOnFocus: true,
+									}).showToast();
+									}
+								});
+							});
+						}
+					}
+				}
+			}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/view/template/common/column_left.twig">
+        <operation>
+            <search regex="true"><![CDATA[
+            ~</ul>$~i
+            ]]></search>
+            <add position="before"><![CDATA[
+                <li id="smartbill"><a class="parent"><i class="fa fa-cog fa-fw"></i> <span>{{ text_smartbill }}</span></a>
+                    <ul>
+                        <li><a href="{{ smartbill_login }}">{{ text_smartbill_login }}</a></li>
+                        <li><a href="{{ smartbill_settings }}">{{ text_smartbill_settings }}</a></li>
+                        <li><a href="{{ smartbill_help }}">{{ text_smartbill_help }}</a></li>
+                    </ul>
+                </li>
+            ]]></add>
+        </operation>
+    </file>
+	<file path="admin/controller/common/column_left.php">
+		<operation>
+		  <search>
+		    <![CDATA[$this->load->model('sale/order');]]>
+		  </search>
+		  <add position="before">
+		    <![CDATA[
+				if (version_compare(VERSION , '3.0.0.0' , '>=')) {
+		            $menu_smartbill[] = array(
+					            'name'	   => $this->language->get('text_smartbill_login'),
+					            'href'     => $this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], true),
+					            'children' => array()
+				          );
+		            $menu_smartbill[] = array(
+					            'name'	   => $this->language->get('text_smartbill_settings'),
+					            'href'     => $this->url->link('extension/smartbill_settings', 'user_token=' . $this->session->data['user_token'], true),
+					            'children' => array()
+				          );
+		            $menu_smartbill[] = array(
+					            'name'	   => $this->language->get('text_smartbill_help'),
+					            'href'     => $this->url->link('extension/smartbill_help', 'user_token=' . $this->session->data['user_token'], true),
+					            'children' => array()
+				          );
+		            $data['menus'][] = array(
+					            'id'       => 'menu-smartbill',
+					            'icon'	   => 'fa-cog fw',
+					            'name'	   => $this->language->get('text_smartbill'),
+					            'href'     => '',
+					            'children' => $menu_smartbill
+				          );
+				}
+			]]></add>
+		</operation>
+	</file>
+    <file path="admin/controller/common/menu.php">
+        <operation>
+            <search><![CDATA[
+            $this->load->language('common/menu');
+            ]]></search>
+            <add position="after"><![CDATA[
+				if (version_compare(VERSION , '3.0.0.0' , '>=')) {
+					$data['text_smartbill'] = $this->language->get('text_smartbill');
+					$data['text_smartbill_login'] = $this->language->get('text_smartbill_login');
+					$data['text_smartbill_settings'] = $this->language->get('text_smartbill_settings');
+					$data['text_smartbill_help'] = $this->language->get('text_smartbill_help');
+					$data['smartbill_login'] = $this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL');
+					$data['smartbill_settings'] = $this->url->link('extension/smartbill_settings', 'user_token=' . $this->session->data['user_token'], 'SSL');
+					$data['smartbill_help'] = $this->url->link('extension/smartbill_help', 'user_token=' . $this->session->data['user_token'], 'SSL');
+				}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/sale/order.php">
+        <operation>
+            <search><![CDATA[
+            function info() {
+            ]]></search>
+            <add position="after"><![CDATA[
+
+		if (version_compare(VERSION , '3.0.0.0' , '>=')) {
+			$orderData = $this->db->query("SELECT smartbill_document_url FROM `" . DB_PREFIX . "order` WHERE `order_id`=" . (int)$this->request->get['order_id']);
+			$data['smartbill'] = $this->url->link('extension/smartbill_document', 'user_token=' . $this->session->data['user_token'] . '&order_id=' . (int)$this->request->get['order_id'], 'SSL');
+			$data['smartbill_mail'] = $this->url->link('extension/smartbill_document/send_mail', 'user_token=' . $this->session->data['user_token'] . '&order_id=' . (int)$this->request->get['order_id'], 'SSL');
+			$data['button_smartbill'] = !empty($orderData->rows[0]['smartbill_document_url']) ? 'Remite document' : 'Emite document';
+			$data['smartbill_document_url'] = $orderData->rows[0]['smartbill_document_url'];
+			
+			$data['smartbill_link'] = $this->url->link('extension/smartbill_document', 'user_token=' . $this->session->data['user_token'] . '&order_id=', 'SSL');
+			$smartbill_settings = $this->db->query("SELECT " . DB_PREFIX . "setting.key," . DB_PREFIX . "setting.value FROM `" . DB_PREFIX . "setting` WHERE " . DB_PREFIX . "setting.key='SMARTBILL_AUTOMATICALLY_ISSUE_DOCUMENT' OR " . DB_PREFIX . "setting.key='SMARTBILL_ORDER_STATUS'");
+			$smartbill_settings_array=[];
+			foreach($smartbill_settings->rows as $row){
+				$smartbill_settings_array[$row['key']]=$row['value'];
+			}
+			$data['smartbill_settings'] = json_encode($smartbill_settings_array);
+			
+		}
+
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+            function getList() {
+            ]]></search>
+            <add position="after"><![CDATA[
+
+		if (version_compare(VERSION , '3.0.0.0' , '>=')) {
+			$per_page = $this->config->get('config_limit_admin');
+			$current_page = 1;
+			if (isset($this->request->get['page'])) {
+				$current_page = $this->request->get['page'];
+			}
+			$sort_by = 'o.order_id';
+			$sort_dir = 'DESC';
+			if (isset($this->request->get['sort'])) {
+				$sort_by = $this->request->get['sort'];
+			}
+			if (isset($this->request->get['order'])) {
+				$sort_dir = $this->request->get['order'];
+			}
+			$limit_start = 0;
+			if ($current_page > 1) {
+				$limit_start = ($current_page-1)*$per_page;
+			}
+			$orderData = $this->db->query("SELECT o.order_id, o.smartbill_document_url FROM `" . DB_PREFIX . "order` as o WHERE o.order_status_id != '0' ORDER BY $sort_by $sort_dir LIMIT $limit_start, $per_page");
+			$data['smartbill_documents'] = json_encode($orderData->rows);
+		}
+
+            ]]></add>
+        </operation>
+		 <operation>
+            <search><![CDATA[
+            function getForm() {
+            ]]></search>
+            <add position="after"><![CDATA[
+				if (version_compare(VERSION , '3.0.0.0' , '>=')) {
+					if(isset($this->request->get['order_id'])){
+						$orderData = $this->db->query("SELECT smartbill_document_url FROM `" . DB_PREFIX . "order` WHERE `order_id`=" . (int)$this->request->get['order_id']);
+						$data['smartbill_document_url'] = $orderData->rows[0]['smartbill_document_url'];
+					}
+					$data['smartbill_link'] = $this->url->link('extension/smartbill_document', 'user_token=' . $this->session->data['user_token'] . '&order_id=', 'SSL');
+					$smartbill_settings = $this->db->query("SELECT " . DB_PREFIX . "setting.key," . DB_PREFIX . "setting.value FROM `" . DB_PREFIX . "setting` WHERE " . DB_PREFIX . "setting.key='SMARTBILL_AUTOMATICALLY_ISSUE_DOCUMENT' OR " . DB_PREFIX . "setting.key='SMARTBILL_ORDER_STATUS'");
+					$smartbill_settings_array=[];
+					foreach($smartbill_settings->rows as $row){
+						$smartbill_settings_array[$row['key']]=$row['value'];
+					}
+					$data['smartbill_settings'] = json_encode($smartbill_settings_array);
+				}
+            ]]></add>
+        </operation>
+    </file>
+
+
+	<file path="catalog/view/theme/default/template/account/order_info.twig">
+		<operation>
+			<search index="0"><![CDATA[
+			<div id="account-order" 
+			]]></search>
+			<add position="before"><![CDATA[
+				{% if (smartbill_public_invoice) %}
+					<script type="text/javascript">
+						$(document).ready(function () {
+							var smartbill_invoice = "{{smartbill_public_invoice}}";
+							$(".buttons").append('<div style="margin-right:5px;" class="pull-right"><a target="_blank" href='+smartbill_invoice+' class="btn btn-primary">Vezi factura</a></div>');
+						});
+					</script>
+				{% endif %}
+			]]></add>
+		</operation>
+	</file>
+
+    <file path="catalog/controller/account/order.php">
+        <operation>
+            <search><![CDATA[
+            public function info() { 
+            ]]></search>
+            <add position="after"><![CDATA[
+				$smartbill_invoice = $this->db->query("SELECT value FROM `" . DB_PREFIX . "setting` WHERE `key`= 'SMARTBILL_PUBLIC_INVOICE'");	
+				if(isset($smartbill_invoice->rows[0]) && isset($smartbill_invoice->rows[0]['value']) && (bool)$smartbill_invoice->rows[0]['value']){ 
+					$smrt_db_check = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "order` LIKE 'smartbill_public_invoice'");
+					if ( !empty($smrt_db_check->rows) ) {
+						$orderData = $this->db->query("SELECT smartbill_public_invoice FROM `" . DB_PREFIX . "order` WHERE `order_id`=" . (int)$this->request->get['order_id']);
+						if(isset($orderData->rows[0])){
+							$data['smartbill_public_invoice'] = !empty($orderData->rows[0]['smartbill_public_invoice']) ? $orderData->rows[0]['smartbill_public_invoice'] : '';
+						}
+					}	
+				}
+
+            ]]></add>
+        </operation>
+    </file>
+
+
+</modification>

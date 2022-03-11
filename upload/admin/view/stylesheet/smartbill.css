@@ -1,0 +1,30 @@
+.smartbill-logo {
+    display: inline-block;
+    margin: 1rem 2rem 1rem 0;
+}
+
+#smrt_loading .fa {
+    animation: rotation 2s infinite linear;
+}
+
+.smrt_greyed_out_text{
+    opacity: 0.6;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}
+
+.smrt_url{
+    border-width: thin;
+    border-color: black;
+    border-style: solid;
+    padding: 2px 10px;
+    font-weight: 800;
+    font-size: 100%;
+}
