@@ -7,3 +7,7 @@ INSERT INTO ##prefix##setting ( `store_id`, `code`, `key`,`value`, `serialized`)
 ## Query to set module status to disabled 
 
 DELETE FROM ##prefix##setting WHERE `key`='smartbill_status'
+
+
+## Official Module URL
+<a href="https://api.smartbill.ro/plugins.html#opencart" target="_blank">Source</a>
