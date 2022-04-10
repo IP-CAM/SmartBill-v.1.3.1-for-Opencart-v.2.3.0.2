@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>SmartBill Cloud</name>
+    <name>SmartBill</name>
     <code>sbc00001</code>
-    <version>1.3.1</version>
-    <author>IntelligentIT</author>
+    <version>1.3.3</version>
+    <author>smarbill.ro</author>
     <link>http://www.smartbill.ro</link>
 
 

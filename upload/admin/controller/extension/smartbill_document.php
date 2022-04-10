@@ -81,11 +81,16 @@ class ControllerExtensionSmartbillDocument extends Controller {
                 'dueDate' 		    => date('Y-m-d', time() + $due_days * 24 * 3600),
                 'deliveryDate' 	    => date('Y-m-d', time() + $delivery_days * 24 * 3600),
                 'currency'          => $options['SMARTBILL_DOCUMENT_CURRENCY_DOC'],
+                'language'          => $options['SMARTBILL_INVOICE_LANG'],
                 'observations'      => "",
                 'mentions' 		    => "Comanda #".$order_id,
                 'products' 		    => $products,
                 'useStock'          => false
             ];
+
+            if($options['SMARTBILL_USE_INTRA_CIF']=='intracom' && $client_data['country']!='Romania'){
+                $smartbillInvoice['useIntraCif'] = true;
+            }
 
             if($options['SMARTBILL_SEND_MAIL_WITH_DOCUMENT']=='1'){
                 $smartbillInvoice['sendEmail']= true;
@@ -175,10 +180,10 @@ class ControllerExtensionSmartbillDocument extends Controller {
         }
         
         // Update orders table field
-        if (!empty($serverCall['documentUrl'])) {
+        if (isset($return['documentUrl']) && !empty($return['documentUrl'])) {
             $this->db->query("UPDATE `" . DB_PREFIX . "order` SET `smartbill_document_url` = '{$return['documentUrl']}' WHERE `order_id` = {$order_id}");
         }
-        if (!empty($serverCall['documentUrl'])) {
+        if (isset($return['public_invoice']) && !empty($return['public_invoice'])) {
             $this->db->query("UPDATE `" . DB_PREFIX . "order` SET `smartbill_public_invoice` = '{$return['public_invoice']}' WHERE `order_id` = {$order_id}");
         }
        

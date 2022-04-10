@@ -45,7 +45,7 @@ class ControllerExtensionSmartbillSettings extends Controller {
             $site_uri=$_SERVER["REQUEST_URI"];
             $site_uri=str_replace('admin/index.php','index.php',$site_uri);
             $site_uri=str_replace('extension/smartbill_settings','extension/smartbill_sync_stock',$site_uri);
-            $site_uri=explode('&user_token=',$site_uri)[0];
+            $site_uri=explode('&token=',$site_uri)[0];
             $data['site_url']= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === true ? "https" : "http") . "://$_SERVER[HTTP_HOST]$site_uri";
 
             // get vat rates
@@ -185,9 +185,11 @@ class ControllerExtensionSmartbillSettings extends Controller {
             $oc_currencies = $this->model_localisation_currency->getCurrencies();
             $currencies = $this->model_extension_smartbill->getCurrencies($oc_currencies);
             $data['currencies'] = $currencies;
+            $data['languages'] = $this->model_extension_smartbill->getLanguages();
+            $data['used_cifs'] = $this->model_extension_smartbill->getUsedCIFs();
 
         } else {
-            $this->response->redirect($this->url->link('extension/module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'));
+            $this->response->redirect($this->url->link('extension/module/smartbill', 'token=' . $this->session->data['token'], true));
             exit;
         }
 
@@ -219,6 +221,7 @@ class ControllerExtensionSmartbillSettings extends Controller {
         $data['success'] = '';
 
         $data['heading_title'] = $this->language->get('heading_title');
+        $data['module_version'] = SMRT_VERSION;
 
         $data['text_enabled'] = $this->language->get('text_enabled');
         $data['text_disabled'] = $this->language->get('text_disabled');
@@ -239,8 +242,8 @@ class ControllerExtensionSmartbillSettings extends Controller {
         $data['button_add_module'] = $this->language->get('button_add_module');
         $data['button_remove'] = $this->language->get('button_remove');
 
-        $data['action'] = $this->url->link('extension/smartbill_settings', 'user_token=' . $this->session->data['user_token'], 'SSL'); // URL to be directed when the save button is pressed
-        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'], 'SSL'); // URL to be redirected when cancel button is pressed
+        $data['action'] = $this->url->link('extension/smartbill_settings', 'token=' . $this->session->data['token'], true); // URL to be directed when the save button is pressed
+        $data['cancel'] = $this->url->link('marketplace/extension', 'token=' . $this->session->data['token'], true); // URL to be redirected when cancel button is pressed
     }
 
     private function saveSettings() {
@@ -339,6 +342,12 @@ class ControllerExtensionSmartbillSettings extends Controller {
         }
         if ( isset($this->request->post['smartbill_send_mail_bcc']) ) {
             $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_SEND_MAIL_BCC', $this->request->post['smartbill_send_mail_bcc']);
+        }
+        if ( isset($this->request->post['smartbill_invoice_lang']) ) {
+            $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_INVOICE_LANG', $this->request->post['smartbill_invoice_lang']);
+        }
+        if ( isset($this->request->post['smartbill_use_intra_cif']) ) {
+            $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_USE_INTRA_CIF', $this->request->post['smartbill_use_intra_cif']);
         }
 
         $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_TAXES', json_encode($this->model_extension_smartbill->getVatRates()));

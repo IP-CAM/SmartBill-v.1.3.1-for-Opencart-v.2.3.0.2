@@ -1,6 +1,6 @@
 <?php
 // Heading
-$_['heading_title']       = 'SmartBill Cloud';
+$_['heading_title']       = 'SmartBill Facturare/Gestiune';
 
 $_['button_login']		  = 'Login';
 $_['button_save']		  = 'Salveaza';

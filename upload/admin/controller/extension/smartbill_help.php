@@ -21,18 +21,15 @@ class ControllerExtensionSmartbillHelp extends Controller {
 	    $data['breadcrumbs'] = array(
             array(
                 'text'      => $this->language->get('text_home'),
-                'href'      => $this->url->link('common/home', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-                'separator' => false
+                'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], true),
             ),
             array(
-                'text'      => $this->language->get('text_module'),
-                'href'      => $this->url->link('module/smartbill', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-                'separator' => ' :: '
+                'text'      => $this->language->get('text_extension'),
+                'href'      => $this->url->link('extension/module/smartbill', 'token=' . $this->session->data['token'], true),
             ),
             array(
                 'text'      => $this->language->get('heading_title'),
-                'href'      => $this->url->link('smartbill/help', 'user_token=' . $this->session->data['user_token'], 'SSL'),
-                'separator' => ' :: '
+                'href'      => $this->url->link('smartbill/help', 'token=' . $this->session->data['token'], true),
             ),
         );
 	}

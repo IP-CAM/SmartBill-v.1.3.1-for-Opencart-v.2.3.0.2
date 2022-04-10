@@ -100,6 +100,17 @@
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-meta-title">CIF utilizat</label>
+                        <div class="col-sm-10">
+                            <select name="smartbill_use_intra_cif" class="form-control">
+                               <?php echo $thisSettings->_renderSelect($used_cifs, 'value', 'label', SMARTBILL_USE_INTRA_CIF); ?>
+                            </select>
+                            <div><small> 
+                                In cazul <a target="_blank" href="https://ajutor.smartbill.ro/article/245-cif-intracomunitar">CIF-ului intracomunitar</a>, acesta va fi preluat din <a target="_blank" href="https://cloud.smartbill.ro/core/configurare/date-firma/"><strong>SmartBill&gt;Configurare</strong></a> si va fi prezent doar pe facturile emise catre clienti din afara Romaniei.
+                            </small></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-meta-title">Tipul de document emis<br>in SmartBill</label>
                         <div class="col-sm-10">
                             <select name="smartbill_document_type" class="form-control">
@@ -182,6 +193,14 @@
                         <div class="col-sm-10">
                             <select name="smartbill_document_currency_doc" class="form-control">
                                 <?php echo $thisSettings->_renderSelect($currencies, 'value', 'label', SMARTBILL_DOCUMENT_CURRENCY_DOC); ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-meta-title">Limba documentului emis <br>in SmartBill </label>
+                        <div class="col-sm-10">
+                            <select name="smartbill_invoice_lang" class="form-control">
+                                <?php echo $thisSettings->_renderSelect($languages, 'value', 'label', SMARTBILL_INVOICE_LANG); ?>
                             </select>
                         </div>
                     </div>

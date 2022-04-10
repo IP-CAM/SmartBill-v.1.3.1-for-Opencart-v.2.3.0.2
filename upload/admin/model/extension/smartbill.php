@@ -3,7 +3,7 @@
  * @copyright  Copyright 2019-2020 © Intelligent IT SRL. All rights reserved.
  */
 
-define( 'SMRT_VERSION', '1.3.1') ;
+define( 'SMRT_VERSION', '1.3.3') ;
 define( 'SMRT_DOCUMENT_TYPE_INVOICE', 0 );
 define( 'SMRT_DOCUMENT_TYPE_ESTIMATE', 1 );
 define( 'SMRT_DATABASE_INVOICE_STATUS_DRAFT', 0 );
@@ -101,6 +101,7 @@ class ModelExtensionSmartbill extends Model {
             'SMARTBILL_USER'                        => '',
             'SMARTBILL_API_TOKEN'                   => '',
             'SMARTBILL_CIF'                         => '',
+            'SMARTBILL_USE_INTRA_CIF'               => '',
             'SMARTBILL_PRICES_INCLUDE_VAT'          => '',
             'SMARTBILL_PRICES_VAT'                  => '',
             'SMARTBILL_TRANSPORT_VAT'               => '',
@@ -112,6 +113,7 @@ class ModelExtensionSmartbill extends Model {
             'SMARTBILL_ORDER_UNIT_TYPE'             => '',
             'SMARTBILL_DOCUMENT_CURRENCY'           => '',
             'SMARTBILL_DOCUMENT_CURRENCY_DOC'       => '',
+            'SMARTBILL_INVOICE_LANG'                => '',
             'SMARTBILL_ORDER_INCLUDE_TRANSPORT'     => '',
             'SMARTBILL_COMPANY_SAVE_PRODUCT'        => '',
             'SMARTBILL_COMPANY_SAVE_CLIENT'         => '',
@@ -326,6 +328,41 @@ class ModelExtensionSmartbill extends Model {
             }
             return $return;
         }
+    }
+
+    /**
+    * Function used to get the raw languages
+    *
+    * @return array $languages
+    */
+    public function getLanguages() {
+        $languages=[
+            ['value'=>"RO","label"=>'Romana'],
+            ['value'=>"EN","label"=>'Engleza'],
+            ['value'=>"FR","label"=>'Franceza'],
+            ['value'=>"IT","label"=>'Italiana'],
+            ['value'=>"SP","label"=>'Spaniola'],
+            ['value'=>"HU","label"=>'Maghiara'],
+            ['value'=>"DE","label"=>'Germana']
+        ];
+
+        return $languages;
+    }
+
+    /**
+    * Function used to get the used CIF options
+    *
+    * @return array $used_cifs
+    */
+    public function getUsedCIFs() {
+        $settings = $this->getSettings();
+
+        $used_cifs=[
+            ['value'=>"authcif","label"=>$settings['SMARTBILL_CIF']],
+            ['value'=>"intracom","label"=>'CIF intracomunitar']
+        ];
+
+        return $used_cifs;
     }
 
     /**
