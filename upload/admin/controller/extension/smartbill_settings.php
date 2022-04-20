@@ -243,7 +243,7 @@ class ControllerExtensionSmartbillSettings extends Controller {
         $data['button_remove'] = $this->language->get('button_remove');
 
         $data['action'] = $this->url->link('extension/smartbill_settings', 'token=' . $this->session->data['token'], true); // URL to be directed when the save button is pressed
-        $data['cancel'] = $this->url->link('marketplace/extension', 'token=' . $this->session->data['token'], true); // URL to be redirected when cancel button is pressed
+        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'], true); // URL to be redirected when cancel button is pressed
     }
 
     private function saveSettings() {
