@@ -5,21 +5,45 @@ class ControllerExtensionSmartbillSyncStock extends Controller {
     public function index() {
         $this->load->model('setting/setting');
         $options = $this->model_setting_setting->getSetting('SMARTBILL');
+        $file=DIR_LOGS.'smartbill_sincronizare_stocuri.log';
+        $headers = getallheaders();
+        $json = file_get_contents('php://input');
+        $products=json_decode($json);
         try{
-            if(!isset($options['SMARTBILL_CIF']) || !isset($options['SMARTBILL_USER']) || !isset($options['SMARTBILL_API_TOKEN'])){
-                throw new \Exception('Autentificare esuata. Va rugam verificati datele si incercati din nou.');
-            }
-            if(!isset($options['SMARTBILL_SYNC_STOCK']) || $options['SMARTBILL_SYNC_STOCK']!='1'){
-                throw new \Exception('Setarea "Actualizeaza stocurile din magazinul online" nu este activa.');
-            }
+            if ($this->request->server['REQUEST_METHOD'] == 'POST'  && isset($headers['Authorization'])){
+                if(!isset($options['SMARTBILL_SYNC_STOCK']) || $options['SMARTBILL_SYNC_STOCK']!='1'){
+                    throw new \Exception('Setarea "Actualizeaza stocurile din magazinul online" nu este activa.');
+                }
+                
+                $token=$options['SMARTBILL_API_TOKEN'];
+                if(!empty($token) && !empty($headers['Authorization']) && $headers['Authorization'] == 'Bearer '.$token){
+                    
+                    if(is_null($products)){
+                        throw new \Exception('Eroare sintaxa. Verifica valididatea JSON-ulului trimis.'); 
+                    }
+                    $selected_stock=false;
+                    if (isset($options['SMARTBILL_USED_STOCK'])) {
+                        $selected_stock = $options['SMARTBILL_USED_STOCK'];
+                        if (empty($selected_stock) || $selected_stock == 'fara-gestiune'){
+                            $selected_stock = false;
+                            throw new \Exception('Eroare actualizare stoc. Gestiunea monitorizata nu a fost setata in modulul SmartBill.');
+                        }
+                    } else {
+                        $selected_stock = false;
+                        throw new \Exception('Eroare actualizare stoc. Gestiunea monitorizata nu a fost setata in modulul SmartBill.');
+                    }
 
-            if ($this->request->server['REQUEST_METHOD'] == 'POST'){
-                $json = file_get_contents('php://input');
-                $products=json_decode($json);
+                    $this->smartbill_opencart_stocks_update($products,$options['SMARTBILL_PRODUCT_SKU_TYPE'],$options['SMARTBILL_USED_STOCK']);
 
-                $this->smartbill_opencart_stocks_update($products,$options['SMARTBILL_PRODUCT_SKU_TYPE'],$options['SMARTBILL_USED_STOCK']);
+                }else{
+                    if(file_exists($file)){
+                        error_log("======================================================================================================================================".PHP_EOL,3, $file);
+                    }
+                    $this->smartbill_log($products,"Authentication failed when PRODUCTS RECEIVED");
+                    throw new \Exception('Autentificare esuata. Asigura-te ca tokenul folosit pentru trimiterea notificarii de stoc este corect si ca serverul tau permite autentificarea prin headers.');
+                }
             }else{
-                throw new \Exception('Invalid Method');
+                throw new \Exception('Invalid Request');
             }
         }catch(Exception $e){
             http_response_code(401);
@@ -28,10 +52,22 @@ class ControllerExtensionSmartbillSyncStock extends Controller {
     }
 
     private function smartbill_opencart_stocks_update($products,$sku_type,$selected_stock){
+        $file=DIR_LOGS.'smartbill_sincronizare_stocuri.log';
         if (isset($products->products)){
             $products = $products->products;
         }
+        if(file_exists($file)){
+            error_log("======================================================================================================================================".PHP_EOL,3, $file);
+        }
+
         if(is_array($products)){
+            $this->smartbill_log($products,"PRODUCTS RECEIVED");
+
+            if(count($products)==0){
+                echo('Testul de sincronizare stoc a fost facut cu succes!'.PHP_EOL); 
+            }
+
+            $this->smartbill_log("START STOCK SYNC","INFO");
             foreach($products as $product){
                 if ($selected_stock && strtolower($product->warehouse) == strtolower($selected_stock)){
                     $product_id=null;
@@ -39,45 +75,122 @@ class ControllerExtensionSmartbillSyncStock extends Controller {
                     if(isset($product->productCode) && trim($product->productCode) != ""){
                         $product_id=$this->smartbill_opencart_get_product_by_sku($product->productCode,$sku_type);
                         if($product_id==false){
-                            $product_id=$this->smartbill_opencart_get_product_by_name($product->productName);
-                        }
-                        if(preg_match("/(?=.*[;])(?=.*[(])(?=.*[)])/i", $product->productName)!==0){
-                            $has_options=true;
+                            echo('"Eroare actualizare stoc. Produsul cu codul '.$product->productCode.' nu a fost gasit in nomenclatorul Opencart."'.PHP_EOL);  
+                            $this->smartbill_log("Product with product code $product->productCode not found!","ERROR");  
+
+                            if(preg_match("/(?=.*[;])(?=.*[(])(?=.*[)])/i", $product->productName)===0){
+                                $product_id=$this->smartbill_opencart_get_product_by_name($product->productName); 
+
+                                if($product_id==false){
+                                    echo('"Eroare actualizare stoc. Produsul cu numele '.$product->productName.' nu a fost gasit in nomenclatorul Opencart."'.PHP_EOL);
+                                    $this->smartbill_log("Product with product name $product->productName not found!","ERROR");   
+                                }
+                            }else{
+                                $temp_name=trim($product->productName);
+                                $temp_name=substr($temp_name, 0, -1);
+                                $temp_name=explode('(',$temp_name);
+                                $product_options=trim($temp_name[1]);
+                                $product_options=explode(';',$product_options);
+                                $temp_name=trim($temp_name[0]);
+                                $product_id=$this->smartbill_opencart_get_product_with_options_by_name($temp_name,$product_options);
+                                $has_options=true;
+
+                                if($product_id==false){
+                                    echo('"Eroare actualizare stoc. Produsul cu variatii cu numele '.$product->productName.' nu a fost gasit in nomenclatorul Opencart."'.PHP_EOL);
+                                    $this->smartbill_log("Product with product name $product->productName not found!","ERROR");   
+                                }
+                            }
                         }
                     }else {
                         //A product has options if in the product name you can find these caractres "(", ")", ";"
                         //Users must be informed to NOT use all of these caracters in the name of any product
                         if(preg_match("/(?=.*[;])(?=.*[(])(?=.*[)])/i", $product->productName)===0){
                            $product_id=$this->smartbill_opencart_get_product_by_name($product->productName); 
+
+                            if($product_id==false){
+                                echo('"Eroare actualizare stoc. Produsul cu numele '.$product->productName.' nu a fost gasit in nomenclatorul Opencart."'.PHP_EOL);
+                                $this->smartbill_log("Product with product name $product->productName not found!","ERROR");   
+                            }
                         }else{
-                            $product->productName=trim($product->productName);
-                            $product->productName=substr($product->productName, 0, -1);
-                            $product->productName=explode('(',$product->productName);
-                            $product_options=trim($product->productName[1]);
+                            $temp_name=trim($product->productName);
+                            $temp_name=substr($temp_name, 0, -1);
+                            $temp_name=explode('(',$temp_name);
+                            $product_options=trim($temp_name[1]);
                             $product_options=explode(';',$product_options);
-                            $product->productName=trim($product->productName[0]);
-                            $product_id=$this->smartbill_opencart_get_product_with_options_by_name($product->productName,$product_options);
+                            $temp_name=trim($temp_name[0]);
+                            $product_id=$this->smartbill_opencart_get_product_with_options_by_name($temp_name,$product_options);
                             $has_options=true;
+
+                            if($product_id==false){
+                                echo('"Eroare actualizare stoc. Produsul cu variatii cu numele '.$product->productName.' nu a fost gasit in nomenclatorul Opencart."'.PHP_EOL);
+                                $this->smartbill_log("Product with product name $product->productName not found!","ERROR");   
+                            }
                         }
                     } 
                    
                     if(!is_null($product_id) && $product_id!=false){ 
+                        if(!isset($product->productCode) || empty($product->productCode)){
+                            if($has_options){
+                                $this->smartbill_log("Product $product->productName has been found by name. Attempting to update stocks.","INFO");
+                            }else{
+                                $this->smartbill_log("Product $product->productName with variations has been found by name. Attempting to update stocks.","INFO");
+                            }
+                        }else{
+                            $this->smartbill_log("Product $product->productName has been found by sku: $product->productCode. Attempting to update stocks.","INFO");
+                        }
+
                         $product->quantity = filter_var($product->quantity, FILTER_SANITIZE_NUMBER_INT);
-                        //Update stocks for product by product id
-                        $this->db->query("UPDATE ".DB_PREFIX ."product SET `quantity` = '$product->quantity' WHERE `product_id` = '$product_id'");
                         
+                        //Update stocks for product by product id
+                        $update_stocks=$this->db->query("UPDATE ".DB_PREFIX ."product SET `quantity` = '$product->quantity' WHERE `product_id` = '$product_id'");
+                        if($update_stocks==false){
+                            echo "Eroare actualizare stoc. Stocul produsului $product->productName nu a fost putut fi actualizat.";
+                            if(!isset($product->productCode) || empty($product->productCode)){
+                                $this->smartbill_log("Couldn't update stocks for product ".$product->productName."!" ,"ERROR");
+                            }else{
+                                $this->smartbill_log("Couldn't update stocks for product ".$product->productName." with sku: ".$product->productCode."!" ,"ERROR"); 
+                            }
+                        }else{
+                            $this->smartbill_log("Quantity of product ".$product->productName." with id ".$product_id." has been updated to ". $product->quantity.".","INFO");             
+                            if(!isset($product->productCode) || empty($product->productCode)){
+                                echo('"Stoc actualizat pentru produsul cu id-ul '.$product_id.' si numele '.$product->productName.'. Stoc nou: '. $product->quantity.'"'.PHP_EOL);
+                            }else{
+                                echo('"Stoc actualizat pentru produsul cu id-ul '.$product_id.' si codul '.$product->productCode.'. Stoc nou: '. $product->quantity.'"'.PHP_EOL);
+                            }
+                        }
+
                         if($has_options){
                             //Update stocks for all options of the product by product id
-                            $this->db->query("UPDATE ".DB_PREFIX ."product INNER JOIN ".DB_PREFIX ."product_option_value 
+                            $update_stocks=$this->db->query("UPDATE ".DB_PREFIX ."product INNER JOIN ".DB_PREFIX ."product_option_value 
                             ON ".DB_PREFIX ."product.product_id = ".DB_PREFIX ."product_option_value.product_id 
                             SET ".DB_PREFIX ."product_option_value.quantity = $product->quantity
                             WHERE (((".DB_PREFIX ."product.product_id)=$product_id));");
+                            
+                            if($update_stocks==false){
+                                echo "Eroare actualizare stoc variatiuni. Stocul produsului $product->productName nu a fost putut fi actualizat.";
+                                if(!isset($product->productCode) || empty($product->productCode)){
+                                    $this->smartbill_log("Couldn't update stocks for product ".$product->productName."!" ,"ERROR");
+                                }else{
+                                    $this->smartbill_log("Couldn't update stocks for product ".$product->productName." with sku: ".$product->productCode."!" ,"ERROR"); 
+                                }
+                            }else{
+                                $this->smartbill_log("Quantity of product ".$product->productName." with id ".$product_id." has been updated to ". $product->quantity.".","INFO");             
+                                if(!isset($product->productCode) || empty($product->productCode)){
+                                    echo('"Stoc variatiuni actualizat pentru produsul cu id-ul '.$product_id.' si numele '.$product->productName.'. Stoc nou: '. $product->quantity.'"'.PHP_EOL);
+                                }else{
+                                    echo('"Stoc variatiuni actualizat pentru produsul cu id-ul '.$product_id.' si codul '.$product->productCode.'. Stoc nou: '. $product->quantity.'"'.PHP_EOL);
+                                }
+                            }
                         }
                     }
+                }else{
+                    $this->smartbill_log( "Plugin configured warehouse: ".$selected_stock." doesn't match received product warehouse: ".$product->warehouse,"ERROR");
+                    echo('"Eroare actualizare stoc. Gestiune configurata in modul: '.$selected_stock.'. Gestiunea produsului '.$product->productName.': '.$product->warehouse.'"'.PHP_EOL); 
                 }
             }
-
-           
+            $this->smartbill_log("STOP STOCK SYNC","INFO");
+        }else{
+            $this->smartbill_log($products,"INVALID PRODUCTS");
         }
     }
 
@@ -143,4 +256,13 @@ class ControllerExtensionSmartbillSyncStock extends Controller {
         }
         
     }
+
+    function smartbill_log($message,$type){
+        $file=DIR_LOGS.'smartbill_sincronizare_stocuri.log';
+        if(file_exists($file)){
+            $format_message=date('Y-m-d H:i:sO').";".$type.";".json_encode($message).PHP_EOL;
+            error_log($format_message,3, $file);
+        }
+    }
+
 }
