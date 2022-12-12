@@ -3,7 +3,7 @@
  * @copyright  Copyright 2019-2020 © Intelligent IT SRL. All rights reserved.
  */
 
-define( 'SMRT_VERSION', '1.3.3') ;
+define( 'SMRT_VERSION', '1.3.6') ;
 define( 'SMRT_DOCUMENT_TYPE_INVOICE', 0 );
 define( 'SMRT_DOCUMENT_TYPE_ESTIMATE', 1 );
 define( 'SMRT_DATABASE_INVOICE_STATUS_DRAFT', 0 );
@@ -102,7 +102,7 @@ class ModelExtensionSmartbill extends Model {
             'SMARTBILL_API_TOKEN'                   => '',
             'SMARTBILL_CIF'                         => '',
             'SMARTBILL_USE_INTRA_CIF'               => '',
-            'SMARTBILL_PRICES_INCLUDE_VAT'          => '',
+            'SMARTBILL_PRICES_INCLUDE_VAT'          => '1',
             'SMARTBILL_PRICES_VAT'                  => '',
             'SMARTBILL_TRANSPORT_VAT'               => '',
             'SMARTBILL_USE_PAYMENT_TAX'             => '',
@@ -114,7 +114,7 @@ class ModelExtensionSmartbill extends Model {
             'SMARTBILL_DOCUMENT_CURRENCY'           => '',
             'SMARTBILL_DOCUMENT_CURRENCY_DOC'       => '',
             'SMARTBILL_INVOICE_LANG'                => '',
-            'SMARTBILL_ORDER_INCLUDE_TRANSPORT'     => '',
+            'SMARTBILL_ORDER_INCLUDE_TRANSPORT'     => '1',
             'SMARTBILL_COMPANY_SAVE_PRODUCT'        => '',
             'SMARTBILL_COMPANY_SAVE_CLIENT'         => '',
             'SMARTBILL_PRICE_INCLUDE_DISCOUNTS'     => '',
@@ -131,6 +131,7 @@ class ModelExtensionSmartbill extends Model {
             'SMARTBILL_SEND_MAIL_BCC'               => '',
 
             'SMARTBILL_SYNC_STOCK'                  => '',
+            'SMARTBILL_SAVE_STOCK_HISTORY'          => '',
             'SMARTBILL_USED_STOCK'                  => '',
 
             'SMARTBILL_IS_DRAFT'                    => '',

@@ -116,7 +116,7 @@ class ControllerExtensionModuleSmartbill extends Controller {
         $data += $this->model_extension_smartbill->getSettings();
 
 		$data['header'] = $this->load->controller('common/header');
-		$data['version'] = SMRT_VERSION;
+		$data['module_version'] = SMRT_VERSION;
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 		$this->response->setOutput($this->load->view('extension/module/smartbill_login', $data));

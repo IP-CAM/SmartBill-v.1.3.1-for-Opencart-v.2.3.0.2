@@ -25,7 +25,7 @@
         <?php } ?>
 
         <img src="view/image/logo-smartbillcloud.png" class="smartbill-logo" />
-        <span>Versiunea: <?php echo $version; ?></span>
+        <span>Versiunea: <?php echo $module_version; ?></span>
         <p>Daca nu aveti cont SmartBill Cloud, inregistrati-va GRATUIT <a href="https://cloud.smartbill.ro/inregistrare-cont/" target="_blank">aici</a>.</p>
 
         <div class="panel panel-default">
@@ -46,7 +46,7 @@
                         <label class="col-sm-2 control-label" for="smartbill_api_token">Token API</label>
                         <div class="col-sm-10">
                             <input type="text" name="smartbill_api_token" required value="<?php echo !empty($SMARTBILL_API_TOKEN) ? $SMARTBILL_API_TOKEN : ''; ?>" class="form-control" id="smartbill_api_token" >
-                            <small>Poti obtine token-ul din contul SmartBill Cloud, in meniul <a href="https://cloud.smartbill.ro/core/integrari/" target="_blank">Contul Meu > Integrari</a></small>
+                            <small>Poti obtine token-ul din contul  <a target="_blank" href="https://cloud.smartbill.ro/core/integrari/">SmartBill &gt; Contul Meu &gt; Integrari</a>, zona API.</small>
                         </div>
                     </div>
                     <div class="form-group required">

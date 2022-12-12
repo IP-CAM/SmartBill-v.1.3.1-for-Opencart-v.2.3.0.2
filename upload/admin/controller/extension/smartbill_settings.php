@@ -13,7 +13,7 @@ class ControllerExtensionSmartbillSettings extends Controller {
         $this->load->model('localisation/order_status');
 
         $this->model_extension_smartbill->validateSettingsValues();
-
+        $data['download_url'] = $this->url->link('extension/smartbill_settings/download_history', 'token=' . $this->session->data['token'], true);
         $this->_labels($data);
         $this->document->setTitle($this->language->get('heading_title')); // Set the title of the page to the heading title in the Language file i.e., SmartBill
 
@@ -200,6 +200,40 @@ class ControllerExtensionSmartbillSettings extends Controller {
         $this->response->setOutput($this->load->view('extension/module/smartbill_settings', $data));
     }
 
+    public function download_history(){
+        $return=[];
+        $error="";
+
+        try{
+            $file=DIR_LOGS.'smartbill_sincronizare_stocuri.log';
+            if(!file_exists($file)){
+                throw new Exception('Fisier inexistent!');
+            }
+
+            $zip_name="smartbill_sincronizare_stocuri";
+            $zip = new ZipArchive();
+        
+            $zip_path=DIR_DOWNLOAD.$zip_name.'.zip';
+            $zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            $zip->addFile($file,"smartbill_sincronizare_stocuri.log");
+            $zip->close();
+            
+        
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename='.basename($zip_name));
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($zip_path));
+            readfile($zip_path);    
+            exit;   
+
+        }catch(Exception $e){
+            die('');
+        }
+
+    }
+
     public function _renderSelect($values, $keyValue, $keyLabel, $selectedValue) {
         $html = '';
 
@@ -324,6 +358,20 @@ class ControllerExtensionSmartbillSettings extends Controller {
         }
         if ( isset($this->request->post['smartbill_sync_stock']) ) {
             $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_SYNC_STOCK', $this->request->post['smartbill_sync_stock']);
+        }
+        if ( isset($this->request->post['smartbill_save_stock_history']) ) {
+            $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_SAVE_STOCK_HISTORY', $this->request->post['smartbill_save_stock_history']);
+            
+            $file=DIR_LOGS.DIRECTORY_SEPARATOR.'smartbill_sincronizare_stocuri.log';
+            if( $this->request->post['smartbill_save_stock_history']==true && !file_exists($file)){
+                $mylog = fopen( $file, "a") or die("Unable to open file!");
+                $firstmessage = json_encode("##Started Logging##")."\n";
+                fwrite($mylog, $firstmessage);
+                fclose($mylog);
+            }
+            if(file_exists($file) && $this->request->post['smartbill_save_stock_history']==false){
+                unlink($file);
+            }
         }
         if ( isset($this->request->post['smartbill_used_stock']) ) {
             $this->model_setting_setting->editSettingValue('SMARTBILL', 'SMARTBILL_USED_STOCK', $this->request->post['smartbill_used_stock']);

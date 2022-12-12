@@ -1,5 +1,6 @@
 <?php echo $header; ?>
 <link href="view/stylesheet/smartbill.css" type="text/css" rel="stylesheet" />
+<link href="view/stylesheet/sweetalert.css" type="text/css" rel="stylesheet" />
 <?php echo $column_left; ?>
 <div id="content">
     <div class="page-header">
@@ -8,7 +9,7 @@
                 <button type="submit" form="form" data-toggle="tooltip" title="<?php echo $button_save; ?>" class="btn btn-primary"><i class="fa fa-save"></i></button>
                 <a href="<?php echo $cancel; ?>" data-toggle="tooltip" title="<?php echo $button_cancel; ?>" class="btn btn-default"><i class="fa fa-reply"></i></a>
             </div>
-                <h1><?php echo $heading_title; ?></h1>
+                <h1>Setari SmartBill v. <?php echo $module_version; ?></h1>
         </div>
     </div>
     <div class="container-fluid">
@@ -406,6 +407,27 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group smrt-hide-sync-settings">
+                        <label class="col-sm-2 control-label">Activeaza istoric</label>
+                         <div class="col-sm-10">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-primary<?php if ($SMARTBILL_SAVE_STOCK_HISTORY == 1) { ?> active<?php } ?>">
+                                    <input type="radio" name="smartbill_save_stock_history" value="1" <?php if ($SMARTBILL_SAVE_STOCK_HISTORY == 1) { ?> checked="checked" <?php } ?>>
+                                    Da
+                                </label>
+                                <label class="btn btn-primary<?php if ($SMARTBILL_SAVE_STOCK_HISTORY == 0) {?> active<?php } ?>">
+                                    <input type="radio" name="smartbill_save_stock_history" value="0" <?php if ($SMARTBILL_SAVE_STOCK_HISTORY == 0) { ?> checked="checked" <?php } ?>>
+                                    Nu
+                                </label>
+                            </div>
+                            <div>
+                                <?php if ($SMARTBILL_SAVE_STOCK_HISTORY == 1) { ?>
+                                    </br>
+                                    <a id="smartbill-download-sync-stock-history" style="margin-right:5px;" href= "<?php echo $download_url; ?>" target="_blank" class="btn btn-primary">Descarca istoric</a>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="panel panel-default">
@@ -454,4 +476,5 @@
     </div>
 </div>
 <script type="text/javascript" src="view/javascript/smartbill.js"></script>
+<script type="text/javascript" src="view/javascript/sweetalert.js"></script>
 <?php echo $footer; ?>
